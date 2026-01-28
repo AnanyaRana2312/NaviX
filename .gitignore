@@ -1,0 +1,49 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+
+# ===== Virtual Environments =====
+venv/
+env/
+.venv/
+ENV/
+
+# ===== PyCharm / IDE =====
+.idea/
+*.iml
+
+# ===== OS Files =====
+.DS_Store
+Thumbs.db
+
+# ===== Environment Variables =====
+.env
+.env.*
+
+# ===== FastAPI / Uvicorn =====
+*.pid
+
+# ===== Testing =====
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ===== Docker =====
+*.tar
+docker-compose.override.yml
+
+# ===== Database =====
+*.db
+*.sqlite
+
+# ===== Temporary / Local Data =====
+data/
+cache/
+tmp/
+
+# ===== Logs =====
+logs/

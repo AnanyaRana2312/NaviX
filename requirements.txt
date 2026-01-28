@@ -1,0 +1,30 @@
+# Backend & API
+fastapi
+uvicorn
+
+# Geospatial processing
+osmnx
+shapely
+geopandas
+pyproj
+
+# Data processing
+numpy
+pandas
+
+# Database
+psycopg2-binary
+sqlalchemy
+geoalchemy2
+
+# Routing & graphs
+networkx
+
+# HTTP & APIs
+requests
+
+# Environment management
+python-dotenv
+
+# Testing
+pytest
