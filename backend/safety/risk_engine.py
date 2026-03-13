@@ -1,6 +1,7 @@
 import psycopg2
 import psycopg2.extras
 import os
+from shapely import wkb
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -32,7 +33,7 @@ def compute_lighting_density(road_geom):
     count = cur.fetchone()[0]
     cur.close()
     conn.close()
-    return count / road_geom.length if road_geom.length > 0 else 0  # density per meter
+    return count / road_geom.length_m if road_geom.length_m > 0 else 0  # density per meter
 
 def compute_poi_density(road_geom):
     """Count POI features within 100m buffer."""
@@ -46,7 +47,7 @@ def compute_poi_density(road_geom):
     count = cur.fetchone()[0]
     cur.close()
     conn.close()
-    return count / road_geom.length if road_geom.length > 0 else 0
+    return count / road_geom.length_m if road_geom.length_m > 0 else 0
 
 def compute_isolation_score(road_geom):
     """Inverse of road density: distance to nearest road."""
@@ -90,11 +91,13 @@ def update_risk_scores():
     """Compute and update risk scores for all roads."""
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, geom FROM roads")
+    cur.execute("SELECT id, geom, length_m FROM roads")
     roads = cur.fetchall()
 
-    for road_id, geom_wkb in roads:
-        geom = psycopg2.extras.wkb.loads(geom_wkb, hex=False)  # Assuming binary
+    for road_id, geom_wkb, length_m in roads:
+        geom = wkb.loads(geom_wkb, hex=True)  # PostGIS returns hex-encoded WKB
+        # Attach length_m so density functions can use real meter values
+        geom.length_m = length_m
 
         lighting = compute_lighting_density(geom)
         poi = compute_poi_density(geom)

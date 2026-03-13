@@ -14,7 +14,7 @@ with col2:
     dest_lat = st.number_input("Destination Latitude", value=40.7306)
     dest_lon = st.number_input("Destination Longitude", value=-73.9352)
 
-place = st.text_input("Place Name", value="New York City")
+place = st.text_input("Place Name", value="Manhattan, New York City, USA")
 max_routes = st.slider("Number of Routes", min_value=1, max_value=3, value=3)
 
 if st.button("Get Routes"):
@@ -27,7 +27,8 @@ if st.button("Get Routes"):
         "max_routes": max_routes
     }
     try:
-        resp = requests.post('http://127.0.0.1:8000/api/v1/routes', json=body, timeout=10)
+        with st.spinner("Fetching routes... (first load may take up to 2 minutes while OSMnx downloads the road graph)"):
+            resp = requests.post('http://127.0.0.1:8000/api/v1/routes', json=body, timeout=150)
         data = resp.json()
         st.session_state['route_data'] = data
         st.session_state['show_map'] = True

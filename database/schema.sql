@@ -29,7 +29,7 @@ CREATE TABLE features (
 -- Table for risk scores per road segment
 CREATE TABLE risk_scores (
     id SERIAL PRIMARY KEY,
-    road_id INTEGER REFERENCES roads(id) ON DELETE CASCADE,
+    road_id INTEGER UNIQUE REFERENCES roads(id) ON DELETE CASCADE,
     lighting_density DOUBLE PRECISION DEFAULT 0,
     poi_density DOUBLE PRECISION DEFAULT 0,
     isolation_score DOUBLE PRECISION DEFAULT 0,

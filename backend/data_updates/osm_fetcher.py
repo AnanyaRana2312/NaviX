@@ -27,7 +27,7 @@ def get_db_connection():
 def fetch_and_store_roads(place):
     """Fetch road network from OSM and store in DB."""
     G = ox.graph_from_place(place, network_type='drive')
-    gdf = ox.graph_to_gdfs(G, nodes=False)[1]  # edges
+    gdf = ox.graph_to_gdfs(G, nodes=False)  # returns edges GDF directly when nodes=False
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -55,7 +55,7 @@ def fetch_and_store_roads(place):
 
 def fetch_and_store_features(place, tags={'amenity': True, 'shop': True, 'highway': 'street_lamp'}):
     """Fetch POIs and features from OSM and store in DB."""
-    gdf = ox.geometries_from_place(place, tags=tags)
+    gdf = ox.features_from_place(place, tags=tags)  # geometries_from_place removed in OSMnx v2
 
     conn = get_db_connection()
     cur = conn.cursor()

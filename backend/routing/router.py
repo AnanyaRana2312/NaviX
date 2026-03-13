@@ -23,25 +23,63 @@ def get_db_connection():
     )
 
 def get_graph_for_place(place):
-    """Fetch or build graph for place. For now, refetch each time."""
+    """Fetch or build graph for place, using OSMnx disk cache to avoid re-downloading."""
+    import pathlib
+    cache_dir = str(pathlib.Path(__file__).resolve().parent.parent.parent / "cache")
+    ox.settings.use_cache = True
+    ox.settings.cache_folder = cache_dir
     return ox.graph_from_place(place, network_type='drive')
 
 def get_nearest_node(G, lat, lon):
-    """Find nearest node in graph to given lat/lon."""
-    point = Point(lon, lat)
-    # ox.distance.nearest_nodes expects x (lon) then y (lat)
-    return ox.distance.nearest_nodes(G, lon, lat)
+    """Find nearest node in graph to given lat/lon using scipy cKDTree."""
+    from scipy.spatial import cKDTree
+    node_ids = list(G.nodes())
+    # Build array of (lat, lon) from node attributes y=lat, x=lon
+    coords = [(G.nodes[n]['y'], G.nodes[n]['x']) for n in node_ids]
+    tree = cKDTree(coords)
+    _, idx = tree.query([lat, lon])
+    return node_ids[idx]
+
+def load_risk_scores_into_graph(G):
+    """Load composite risk scores from DB and stamp them onto matching graph edges."""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        # Join roads + risk_scores on road_id to get osm_id → composite_risk mapping
+        cur.execute("""
+            SELECT r.osm_id, rs.composite_risk
+            FROM roads r
+            JOIN risk_scores rs ON rs.road_id = r.id
+        """)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        # Build lookup: osm_id (int) → risk score
+        risk_lookup = {int(osm_id): risk for osm_id, risk in rows}
+
+        # Stamp risk onto edges using osmid attribute stored by OSMnx
+        for u, v, data in G.edges(data=True):
+            osmid = data.get('osmid')
+            # osmid can be a list (when multiple OSM ways merged) — use first
+            if isinstance(osmid, list):
+                osmid = osmid[0]
+            if osmid is not None:
+                data['risk'] = risk_lookup.get(int(osmid), 0.5)  # default 0.5 if not in DB
+            else:
+                data['risk'] = 0.5
+    except Exception:
+        # If DB is unavailable, leave edges with their default risk
+        pass
+
 
 def compute_route(G, origin_node, dest_node, risk_weight=0.5):
     """Compute shortest path with combined weight: length + risk_weight * risk."""
-    # Add risk to edges
     for u, v, data in G.edges(data=True):
-        # Assume risk is stored or computed, but for now, placeholder
-        # In real, need to map edges to road_id and get risk
-        # For prototype, assume risk = 0.5 or something
-        data['risk'] = data.get('risk', 0.5)  # Placeholder if not present
+        # Risk is pre-loaded by load_risk_scores_into_graph(); default 0.5 if absent
+        data['risk'] = data.get('risk', 0.5)
         length = data.get('length', 0.0)
-        # Use multiplicative combination to keep units consistent
+        # Multiplicative combination keeps units consistent (meters-based)
         data['combined_weight'] = length * (1.0 + risk_weight * data['risk'])
 
     try:
@@ -97,6 +135,7 @@ def find_routes(origin_lat, origin_lon, dest_lat, dest_lon, place, max_routes=3)
     def try_real_routes():
         try:
             G = get_graph_for_place(place)
+            load_risk_scores_into_graph(G)  # stamp DB risk scores onto edges
             origin_node = get_nearest_node(G, origin_lat, origin_lon)
             dest_node = get_nearest_node(G, dest_lat, dest_lon)
 
@@ -113,12 +152,12 @@ def find_routes(origin_lat, origin_lon, dest_lat, dest_lon, place, max_routes=3)
                     })
             if routes:
                 result['routes'] = routes
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[NaviX] Real routing failed: {e}")
 
     thread = threading.Thread(target=try_real_routes)
     thread.start()
-    thread.join(timeout=3)  # Wait max 3 seconds for OSMnx/DB
+    thread.join(timeout=120)  # OSMnx can take up to ~60s on first fetch; cache speeds up retries
 
     if 'routes' in result:
         return result['routes']

@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from shapely.geometry import Point, LineString
 
 # Request models
 class RouteRequest(BaseModel):
