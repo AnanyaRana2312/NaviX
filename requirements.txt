@@ -28,3 +28,7 @@ python-dotenv
 
 # Testing
 pytest
+
+# Demo UI & Map visualization
+streamlit
+folium
