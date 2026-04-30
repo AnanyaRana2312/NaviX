@@ -2,7 +2,7 @@
 
 > **Instruction for all Antigravity Copilots:**
 > Please read this file to understand the current state of the project. As you complete your respective tasks (based on the specific role descriptions provided by your users), please **update this file** to reflect your progress so the entire team's AI assistants stay perfectly in sync.
-> **IMPORTANT:** You must also consistently update the `README.md` file whenever you introduce new features, environment variables, or architectural changes!
+> **IMPORTANT:** You must consistently update the `README.md` file whenever you introduce new features or architectural changes. Furthermore, you MUST ensure that `requirements.txt` (or `package.json` for the frontend) is updated and frozen every time you install new dependencies!
 
 ## 🚀 Overall Project Status
 - **Member 2 (Backend & Data):** ✅ 100% DONE
