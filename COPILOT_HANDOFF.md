@@ -10,6 +10,17 @@
 
 ---
 
+## 🔀 Git & Collaboration Workflow (CRITICAL)
+> **To avoid nasty merge conflicts and lost progress, Members 1 and 3 MUST follow this sequence:**
+
+1. **Phase 1 (Bootstrap):** Member 3 must create the `/frontend` directory, bootstrap the Vite/Next.js app, and push the initial skeleton to the `main` branch. 
+2. **Phase 2 (Branching):** Both members pull the new `main` branch. 
+   - Member 1 creates branch: `feature/devops-api` (Focuses on Dockerfiles, `docker-compose.yml`, and building API hooks in `frontend/src/api/`).
+   - Member 3 creates branch: `feature/ui-design` (Focuses on layout, components, styling, and maps in `frontend/src/components/`).
+3. **Phase 3 (Merging):** Never push directly to `main`. Always open a Pull Request. Since your files are separated (DevOps vs. UI Components), merge conflicts will be inherently minimized.
+
+---
+
 ## 👤 Member 2 (Backend, Database, Safety Modeling) - Status: ✅ 100% DONE
 *Member 2 has fulfilled all project responsibilities. The core system architecture is complete, tested, and fully functional. Their copilot is resting.*
 
