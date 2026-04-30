@@ -14,10 +14,13 @@
 > **To avoid nasty merge conflicts and lost progress, Members 1 and 3 MUST follow this sequence:**
 
 1. **Phase 1 (Bootstrap):** Member 3 must create the `/frontend` directory, bootstrap the Vite/Next.js app, and push the initial skeleton to the `main` branch. 
-2. **Phase 2 (Branching):** Both members pull the new `main` branch. 
+2. **Phase 2 (Branching & Scoping):** 
    - Member 1 creates branch: `feature/devops-api` (Focuses on Dockerfiles, `docker-compose.yml`, and building API hooks in `frontend/src/api/`).
    - Member 3 creates branch: `feature/ui-design` (Focuses on layout, components, styling, and maps in `frontend/src/components/`).
-3. **Phase 3 (Merging):** Never push directly to `main`. Always open a Pull Request. Since your files are separated (DevOps vs. UI Components), merge conflicts will be inherently minimized.
+3. **Phase 3 (Continuous Integration):** To ensure Member 3 can use the API functions Member 1 is writing, **do not use long-lived branches**. 
+   - Member 1 should write the API fetch logic, immediately open a Pull Request, and merge it into `main`.
+   - Member 3 should frequently run `git pull origin main` to pull Member 1's new API hooks into their UI branch. 
+   - By keeping Pull Requests extremely small and merging daily, you both get each other's updates instantly without fighting over massive merge conflicts at the end of the week.
 
 ---
 
