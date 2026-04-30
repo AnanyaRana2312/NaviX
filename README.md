@@ -21,7 +21,7 @@ NaviX is an advanced navigation backend designed to prioritize pedestrian and ve
 
 ### Prerequisites
 - Docker & Docker Compose
-- Python 3.10+
+- Python **3.11.9** (Highly Recommended)
 
 ### Running the Project
 1. **Clone the repository:**
@@ -30,7 +30,20 @@ NaviX is an advanced navigation backend designed to prioritize pedestrian and ve
    cd NaviX
    ```
 
-2. **Setup the Environment:**
+2. **Setup the Virtual Environment & Dependencies:**
+   It is strongly recommended to create and use a Python virtual environment (`.venv`) before installing dependencies:
+   ```bash
+   python -m venv .venv
+   # Windows:
+   .venv\Scripts\activate
+   # macOS/Linux:
+   source .venv/bin/activate
+   
+   # Once the .venv is active, install the up-to-date requirements:
+   pip install -r requirements.txt
+   ```
+
+3. **Configure Secrets:**
    Ensure your `.env` file is present at the root of the project with the required database credentials (`DB_USER`, `DB_PASSWORD`, etc.).
 
 3. **Start the Database (Docker):**
@@ -46,9 +59,9 @@ NaviX is an advanced navigation backend designed to prioritize pedestrian and ve
    ```
 
 ## 👥 Team Roles
-- **Member 1**: DevOps Engineering & Frontend Integration
-- **Member 2**: Backend Architecture, Dataset Management, & Safety Modeling
-- **Member 3**: UI/UX Design & Frontend Development
+- **Ananya Rana** (Member 1): DevOps Engineering & Frontend Integration
+- **Pranav Akshit** (Member 2): Backend Architecture, Dataset Management, & Safety Modeling
+- **Zoya** (Member 3): UI/UX Design & Frontend Development
 
 ---
 *Developed as a collaborative prototype for spatial data science and routing algorithms.*
