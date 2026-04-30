@@ -34,8 +34,17 @@ def fetch_and_store_roads(place):
 
     for idx, row in gdf.iterrows():
         osm_id = row.get('osmid', None)
+        if isinstance(osm_id, list):
+            osm_id = osm_id[0]
+            
         name = row.get('name', None)
+        if isinstance(name, list):
+            name = ", ".join(name)
+            
         highway = row.get('highway', None)
+        if isinstance(highway, list):
+            highway = ", ".join(highway)
+            
         geom = row.geometry
         length_m = row.get('length', 0)
 
@@ -62,7 +71,13 @@ def fetch_and_store_features(place, tags={'amenity': True, 'shop': True, 'highwa
 
     for idx, row in gdf.iterrows():
         osm_id = row.get('osmid', None)
+        if isinstance(osm_id, list):
+            osm_id = osm_id[0]
+            
         name = row.get('name', None)
+        if isinstance(name, list):
+            name = ", ".join(name)
+            
         geom = row.geometry
         if geom.geom_type != 'Point':
             continue  # Only points for now
@@ -75,7 +90,11 @@ def fetch_and_store_features(place, tags={'amenity': True, 'shop': True, 'highwa
         elif row.get('highway') == 'street_lamp':
             feature_type = 'lighting'
 
-        attributes = {k: v for k, v in row.items() if k not in ['geometry', 'osmid', 'name']}
+        import pandas as pd
+        attributes = {}
+        for k, v in row.items():
+            if k not in ['geometry', 'osmid', 'name'] and pd.notna(v):
+                attributes[k] = v
 
         wkt = geom.wkt
 

@@ -27,6 +27,7 @@ class Route(BaseModel):
 
 class RouteResponse(BaseModel):
     routes: List[Route]
+    metadata: Optional[dict] = None
 
 # Feature model for POIs, etc.
 class Feature(BaseModel):

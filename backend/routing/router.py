@@ -89,9 +89,10 @@ def compute_route(G, origin_node, dest_node, risk_weight=0.5):
         return None
 
 def get_route_details(G, path):
-    """Extract path coordinates and total metrics."""
+    """Extract path coordinates, total metrics, and segment details."""
     # Build a list of node coordinates (lat, lon) for the path
     coords = []
+    segments = []
     total_length = 0.0
     total_risk = 0.0
 
@@ -105,7 +106,7 @@ def get_route_details(G, path):
             continue
         coords.append([lat, lon])
 
-    # Sum edge lengths and weighted risks
+    # Sum edge lengths and weighted risks, and collect segment data
     for i in range(len(path) - 1):
         u, v = path[i], path[i+1]
         ed = G.get_edge_data(u, v)
@@ -122,11 +123,34 @@ def get_route_details(G, path):
             data = ed
 
         length = data.get('length', 0.0)
-        risk = data.get('risk', 0.0)
+        risk = data.get('risk', 0.5)
+        
+        # Format name and highway properly
+        name = data.get('name')
+        if isinstance(name, list):
+            name = ", ".join(name)
+        
+        highway = data.get('highway')
+        if isinstance(highway, list):
+            highway = ", ".join(highway)
+            
+        osmid = data.get('osmid')
+        if isinstance(osmid, list):
+            osmid = osmid[0]
+
+        segments.append({
+            'id': i, # Sequential ID for the segment in this route
+            'osm_id': int(osmid) if osmid is not None else None,
+            'name': name,
+            'highway': highway,
+            'length_m': length,
+            'risk_score': risk
+        })
+
         total_length += length
         total_risk += risk * length
 
-    return coords, total_length, total_risk
+    return coords, total_length, total_risk, segments
 
 def find_routes(origin_lat, origin_lon, dest_lat, dest_lon, place, max_routes=3):
     """Find multiple routes balancing safety and distance."""
@@ -144,11 +168,12 @@ def find_routes(origin_lat, origin_lon, dest_lat, dest_lon, place, max_routes=3)
                 risk_weight = i * 0.5  # Vary weight: 0, 0.5, 1.0
                 path = compute_route(G, origin_node, dest_node, risk_weight)
                 if path:
-                    coords, length, risk = get_route_details(G, path)
+                    coords, length, risk, segments = get_route_details(G, path)
                     routes.append({
                         'path': coords,
                         'total_distance': length,
-                        'total_risk': risk
+                        'total_risk': risk,
+                        'segments': segments
                     })
             if routes:
                 result['routes'] = routes
@@ -189,6 +214,7 @@ def find_routes(origin_lat, origin_lon, dest_lat, dest_lon, place, max_routes=3)
         routes.append({
             'path': mock_coords,
             'total_distance': total,
-            'total_risk': risk * total
+            'total_risk': risk * total,
+            'segments': []
         })
     return routes
