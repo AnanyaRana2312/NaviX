@@ -13,8 +13,10 @@ env/
 ENV/
 
 # ===== PyCharm / IDE =====
-.idea/
+.idea/*
 *.iml
+.vs/*
+.vscode/*
 
 # ===== OS Files =====
 .DS_Store
@@ -48,3 +50,9 @@ tmp/
 
 # ===== Logs =====
 logs/
+
+# ===== Other =====
+navix_research_context.md
+navix_research_paper.md
+NaviX_Research_Paper1.md
+
