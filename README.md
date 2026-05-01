@@ -44,7 +44,12 @@ NaviX is an advanced navigation backend designed to prioritize pedestrian and ve
    ```
 
 3. **Configure Secrets:**
-   Ensure your `.env` file is present at the root of the project with the required database credentials (`DB_USER`, `DB_PASSWORD`, etc.).
+   You must configure your local environment variables before running the application. Copy or rename the provided `demo.env` file to `.env`:
+   ```bash
+   cp demo.env .env
+   # Or on Windows CMD/PowerShell:
+   # copy demo.env .env
+   ```
 
 3. **Start the Database (Docker):**
    Spin up the PostGIS container:
