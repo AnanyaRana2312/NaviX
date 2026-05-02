@@ -1,19 +1,25 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies for PostGIS, OSMnx, etc
+# Install system dependencies for geospatial packages
 RUN apt-get update && apt-get install -y \
-    gcc \
+    build-essential \
     libpq-dev \
+    gdal-bin \
     libgdal-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Set GDAL environment variables
+ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
+ENV C_INCLUDE_PATH=/usr/include/gdal
+
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY ./backend /app/backend
 
 EXPOSE 8000
 

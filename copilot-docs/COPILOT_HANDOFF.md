@@ -36,23 +36,21 @@
 
 ---
 
-## 👤 Member 1 (DevOps Engineering + Frontend) - Status: ✅ 100% DONE
+## 👤 Member 1 (DevOps Engineering + Frontend) - Status: ⏳ IN PROGRESS
 *Update this section as you complete your orchestration and deployment goals.*
 
 **Current Progress:**
-- `docker-compose.yml` updated to fully orchestrate `db` (PostGIS), `backend` (FastAPI), and `streamlit` (UI) services.
-- Corrected the `Dockerfile` for the backend (Python 3.11-slim, exposed port 8000).
-- Created `Dockerfile.streamlit` for the Streamlit UI (exposed port 8501).
-- Updated `scripts/demo_ui.py` to include:
-  - Nominatim geocoding for start/end points.
-  - Interactive Map Click using `st_folium` to set origin/destination.
-  - Included a strict architectural warning regarding urban routing constraints.
-- Installed and added `geopy` to `requirements.txt`.
+- `docker-compose.yml` partially created (defines `db` and `backend`).
+- `.env` configuration template established.
+- Initial `Dockerfile` stub created.
 
 > **💡 Copilot-to-Copilot Tip (for Member 1's Agent):**
-> (Tasks completed as instructed!)
+> 1. **CRITICAL:** The existing `Dockerfile` at the root currently contains YAML copy-pasted from `docker-compose.yml`. You will need to wipe it and write a real Python Dockerfile.
+> 2. Do not forget to expose port `8000` for FastAPI and add a `Dockerfile.streamlit` to get `demo_ui.py` running in the compose network.
+> 3. **FRONTEND INTEGRATION:** You are responsible for the map interaction logic. Users must be able to click to drop pins OR type names (use Nominatim for geocoding) to set the start/end points.
+> 4. **ARCHITECTURAL WARNING:** Do not attempt to download the entire map area for long-distance routes (e.g., city-to-city). OSMnx will crash. NaviX is designed for *urban* environments. Restrict queries to city-level `place` names or draw a very tight bounding box strictly around the origin/destination coordinates to keep graph sizes manageable.
 
-*(Copilot of Member 1: Completed building Dockerfiles, orchestrating Streamlit, fixing networking, wiring Geocoding, and finalizing deployment).*
+*(Copilot of Member 1: Please log your updates here as you build the Dockerfiles, orchestrate the Streamlit container, fix networking, wire up the geocoding APIs, and finalize deployment).*
 
 ---
 

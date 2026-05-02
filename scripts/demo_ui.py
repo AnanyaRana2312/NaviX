@@ -1,76 +1,88 @@
+import os
 import streamlit as st
 import requests
 import folium
 from streamlit_folium import st_folium
+from geopy.geocoders import Nominatim
+
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+geolocator = Nominatim(user_agent="navix_demo")
 
 st.title("NaviX Route Demo")
 st.markdown("Safety-aware routing demo. Enter start/end coordinates and place.")
 
 if 'origin_lat' not in st.session_state:
-    st.session_state.origin_lat = 40.7128
-if 'origin_lon' not in st.session_state:
-    st.session_state.origin_lon = -74.0060
+    st.session_state['origin_lat'] = 40.7128
+    st.session_state['origin_lon'] = -74.0060
 if 'dest_lat' not in st.session_state:
-    st.session_state.dest_lat = 40.7306
-if 'dest_lon' not in st.session_state:
-    st.session_state.dest_lon = -73.9352
+    st.session_state['dest_lat'] = 40.7306
+    st.session_state['dest_lon'] = -73.9352
+if 'selecting_mode' not in st.session_state:
+    st.session_state['selecting_mode'] = 'Origin'
 
-from geopy.geocoders import Nominatim
-geolocator = Nominatim(user_agent="navix_demo")
-
-st.markdown("### 1. Select Locations (Click map or Geocode)")
+st.markdown("### Set Locations by Address or Click on Map")
 col1, col2 = st.columns(2)
 with col1:
-    origin_addr = st.text_input("Origin Address (optional)")
-    if st.button("Geocode Origin") and origin_addr:
-        loc = geolocator.geocode(origin_addr)
+    origin_address = st.text_input("Origin Address", "", key="origin_addr")
+    if st.button("Geocode Origin") and origin_address:
+        loc = geolocator.geocode(origin_address)
         if loc:
-            st.session_state.origin_lat, st.session_state.origin_lon = loc.latitude, loc.longitude
-            st.rerun()
+            st.session_state['origin_lat'] = loc.latitude
+            st.session_state['origin_lon'] = loc.longitude
+            st.success(f"Found: {loc.address}")
+        else:
+            st.error("Address not found")
+    origin_lat = st.number_input("Origin Latitude", value=st.session_state['origin_lat'], key="olat")
+    origin_lon = st.number_input("Origin Longitude", value=st.session_state['origin_lon'], key="olon")
+    st.session_state['origin_lat'] = origin_lat
+    st.session_state['origin_lon'] = origin_lon
+
 with col2:
-    dest_addr = st.text_input("Destination Address (optional)")
-    if st.button("Geocode Destination") and dest_addr:
-        loc = geolocator.geocode(dest_addr)
+    dest_address = st.text_input("Destination Address", "", key="dest_addr")
+    if st.button("Geocode Destination") and dest_address:
+        loc = geolocator.geocode(dest_address)
         if loc:
-            st.session_state.dest_lat, st.session_state.dest_lon = loc.latitude, loc.longitude
+            st.session_state['dest_lat'] = loc.latitude
+            st.session_state['dest_lon'] = loc.longitude
+            st.success(f"Found: {loc.address}")
+        else:
+            st.error("Address not found")
+    dest_lat = st.number_input("Destination Latitude", value=st.session_state['dest_lat'], key="dlat")
+    dest_lon = st.number_input("Destination Longitude", value=st.session_state['dest_lon'], key="dlon")
+    st.session_state['dest_lat'] = dest_lat
+    st.session_state['dest_lon'] = dest_lon
+
+st.session_state['selecting_mode'] = st.radio("Click on map below to select:", ["Origin", "Destination"])
+
+select_m = folium.Map(location=[st.session_state['origin_lat'], st.session_state['origin_lon']], zoom_start=12)
+folium.Marker([st.session_state['origin_lat'], st.session_state['origin_lon']], popup="Origin", icon=folium.Icon(color="green")).add_to(select_m)
+folium.Marker([st.session_state['dest_lat'], st.session_state['dest_lon']], popup="Destination", icon=folium.Icon(color="red")).add_to(select_m)
+
+map_data = st_folium(select_m, width=700, height=400, key="select_map")
+if map_data and map_data.get("last_clicked"):
+    lat = map_data["last_clicked"]["lat"]
+    lng = map_data["last_clicked"]["lng"]
+    if st.session_state['selecting_mode'] == 'Origin':
+        if st.session_state['origin_lat'] != lat or st.session_state['origin_lon'] != lng:
+            st.session_state['origin_lat'] = lat
+            st.session_state['origin_lon'] = lng
             st.rerun()
-
-if 'click_step' not in st.session_state:
-    st.session_state.click_step = 'origin'
-
-st.markdown(f"**Map Click Mode:** Currently setting **{st.session_state.click_step.upper()}** (Click map to set)")
-if st.button("Swap Map Click Mode"):
-    st.session_state.click_step = 'dest' if st.session_state.click_step == 'origin' else 'origin'
-    st.rerun()
-
-selection_map = folium.Map(location=[st.session_state.origin_lat, st.session_state.origin_lon], zoom_start=12)
-folium.Marker([st.session_state.origin_lat, st.session_state.origin_lon], tooltip="Origin", icon=folium.Icon(color="green")).add_to(selection_map)
-folium.Marker([st.session_state.dest_lat, st.session_state.dest_lon], tooltip="Destination", icon=folium.Icon(color="red")).add_to(selection_map)
-
-st_data = st_folium(selection_map, height=300, width=700, key="selection_map")
-if st_data and st_data.get("last_clicked"):
-    lat, lng = st_data["last_clicked"]["lat"], st_data["last_clicked"]["lng"]
-    if st.session_state.click_step == 'origin':
-        st.session_state.origin_lat, st.session_state.origin_lon = lat, lng
-        st.session_state.click_step = 'dest'
     else:
-        st.session_state.dest_lat, st.session_state.dest_lon = lat, lng
-        st.session_state.click_step = 'origin'
-    st.rerun()
+        if st.session_state['dest_lat'] != lat or st.session_state['dest_lon'] != lng:
+            st.session_state['dest_lat'] = lat
+            st.session_state['dest_lon'] = lng
+            st.rerun()
 
-col1, col2 = st.columns(2)
-with col1:
-    origin_lat = st.number_input("Origin Latitude", value=st.session_state.origin_lat, key="o_lat")
-    origin_lon = st.number_input("Origin Longitude", value=st.session_state.origin_lon, key="o_lon")
-with col2:
-    dest_lat = st.number_input("Destination Latitude", value=st.session_state.dest_lat, key="d_lat")
-    dest_lon = st.number_input("Destination Longitude", value=st.session_state.dest_lon, key="d_lon")
+origin_lat = st.session_state['origin_lat']
+origin_lon = st.session_state['origin_lon']
+dest_lat = st.session_state['dest_lat']
+dest_lon = st.session_state['dest_lon']
 
 @st.fragment(run_every="5s")
 def render_sidebar_status():
     st.header("Database Status")
     try:
-        prog_resp = requests.get('http://127.0.0.1:8000/api/v1/progress', timeout=2)
+        prog_resp = requests.get(f'{BACKEND_URL}/api/v1/progress', timeout=2)
         if prog_resp.status_code == 200:
             prog_data = prog_resp.json()
             if 'error' in prog_data:
@@ -92,8 +104,6 @@ with st.sidebar:
 place = st.text_input("Place Name", value="Manhattan, New York City, USA")
 max_routes = st.slider("Number of Routes", min_value=1, max_value=3, value=3)
 
-st.warning("⚠️ **Architectural Warning:** NaviX is designed for urban environments. Please restrict your 'Place Name' to city-level boundaries (e.g., 'Brooklyn, New York'). City-to-city routes will cause OSMnx graph extraction to fail due to memory limits.")
-
 if st.button("Get Routes"):
     body = {
         "origin_lat": origin_lat,
@@ -114,7 +124,7 @@ if st.button("Get Routes"):
     result_container = {}
     def fetch_data():
         try:
-            resp = requests.post('http://127.0.0.1:8000/api/v1/routes', json=body, timeout=150)
+            resp = requests.post(f'{BACKEND_URL}/api/v1/routes', json=body, timeout=150)
             result_container['data'] = resp.json()
         except Exception as e:
             result_container['error'] = str(e)

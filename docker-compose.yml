@@ -16,15 +16,15 @@ services:
       - ./backend:/app/backend
     restart: always
 
-  streamlit:
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile.streamlit
-    container_name: navix-streamlit
+    container_name: navix-frontend
     ports:
       - "8501:8501"
-    env_file:
-      - .env
+    environment:
+      - BACKEND_URL=http://backend:8000
     depends_on:
       - backend
     volumes:
