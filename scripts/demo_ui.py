@@ -6,13 +6,65 @@ from streamlit_folium import st_folium
 st.title("NaviX Route Demo")
 st.markdown("Safety-aware routing demo. Enter start/end coordinates and place.")
 
+if 'origin_lat' not in st.session_state:
+    st.session_state.origin_lat = 40.7128
+if 'origin_lon' not in st.session_state:
+    st.session_state.origin_lon = -74.0060
+if 'dest_lat' not in st.session_state:
+    st.session_state.dest_lat = 40.7306
+if 'dest_lon' not in st.session_state:
+    st.session_state.dest_lon = -73.9352
+
+from geopy.geocoders import Nominatim
+geolocator = Nominatim(user_agent="navix_demo")
+
+st.markdown("### 1. Select Locations (Click map or Geocode)")
 col1, col2 = st.columns(2)
 with col1:
-    origin_lat = st.number_input("Origin Latitude", value=40.7128)
-    origin_lon = st.number_input("Origin Longitude", value=-74.0060)
+    origin_addr = st.text_input("Origin Address (optional)")
+    if st.button("Geocode Origin") and origin_addr:
+        loc = geolocator.geocode(origin_addr)
+        if loc:
+            st.session_state.origin_lat, st.session_state.origin_lon = loc.latitude, loc.longitude
+            st.rerun()
 with col2:
-    dest_lat = st.number_input("Destination Latitude", value=40.7306)
-    dest_lon = st.number_input("Destination Longitude", value=-73.9352)
+    dest_addr = st.text_input("Destination Address (optional)")
+    if st.button("Geocode Destination") and dest_addr:
+        loc = geolocator.geocode(dest_addr)
+        if loc:
+            st.session_state.dest_lat, st.session_state.dest_lon = loc.latitude, loc.longitude
+            st.rerun()
+
+if 'click_step' not in st.session_state:
+    st.session_state.click_step = 'origin'
+
+st.markdown(f"**Map Click Mode:** Currently setting **{st.session_state.click_step.upper()}** (Click map to set)")
+if st.button("Swap Map Click Mode"):
+    st.session_state.click_step = 'dest' if st.session_state.click_step == 'origin' else 'origin'
+    st.rerun()
+
+selection_map = folium.Map(location=[st.session_state.origin_lat, st.session_state.origin_lon], zoom_start=12)
+folium.Marker([st.session_state.origin_lat, st.session_state.origin_lon], tooltip="Origin", icon=folium.Icon(color="green")).add_to(selection_map)
+folium.Marker([st.session_state.dest_lat, st.session_state.dest_lon], tooltip="Destination", icon=folium.Icon(color="red")).add_to(selection_map)
+
+st_data = st_folium(selection_map, height=300, width=700, key="selection_map")
+if st_data and st_data.get("last_clicked"):
+    lat, lng = st_data["last_clicked"]["lat"], st_data["last_clicked"]["lng"]
+    if st.session_state.click_step == 'origin':
+        st.session_state.origin_lat, st.session_state.origin_lon = lat, lng
+        st.session_state.click_step = 'dest'
+    else:
+        st.session_state.dest_lat, st.session_state.dest_lon = lat, lng
+        st.session_state.click_step = 'origin'
+    st.rerun()
+
+col1, col2 = st.columns(2)
+with col1:
+    origin_lat = st.number_input("Origin Latitude", value=st.session_state.origin_lat, key="o_lat")
+    origin_lon = st.number_input("Origin Longitude", value=st.session_state.origin_lon, key="o_lon")
+with col2:
+    dest_lat = st.number_input("Destination Latitude", value=st.session_state.dest_lat, key="d_lat")
+    dest_lon = st.number_input("Destination Longitude", value=st.session_state.dest_lon, key="d_lon")
 
 @st.fragment(run_every="5s")
 def render_sidebar_status():
@@ -39,6 +91,8 @@ with st.sidebar:
 
 place = st.text_input("Place Name", value="Manhattan, New York City, USA")
 max_routes = st.slider("Number of Routes", min_value=1, max_value=3, value=3)
+
+st.warning("⚠️ **Architectural Warning:** NaviX is designed for urban environments. Please restrict your 'Place Name' to city-level boundaries (e.g., 'Brooklyn, New York'). City-to-city routes will cause OSMnx graph extraction to fail due to memory limits.")
 
 if st.button("Get Routes"):
     body = {

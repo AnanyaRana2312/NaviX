@@ -2,7 +2,9 @@ version: "3.9"
 
 services:
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: navix-backend
     ports:
       - "8000:8000"
@@ -12,6 +14,21 @@ services:
       - db
     volumes:
       - ./backend:/app/backend
+    restart: always
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: navix-streamlit
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    volumes:
+      - ./scripts:/app/scripts
     restart: always
 
   db:
