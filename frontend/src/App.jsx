@@ -1,122 +1,77 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState } from 'react';
+import axios from 'axios';
+import Sidebar from './components/Sidebar';
+import MapLayout from './components/MapLayout';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeRoutes, setActiveRoutes] = useState([]);
+  const [startPoint, setStartPoint] = useState(null);
+  const [endPoint, setEndPoint] = useState(null);
+
+  const handleRouteCompute = async (start, destination) => {
+    console.log("Computing route from", start, "to", destination);
+    
+    try {
+      // Geocode start location
+      const startRes = await axios.get('https://nominatim.openstreetmap.org/search', {
+        params: { q: start, format: 'json', limit: 1 }
+      });
+      
+      // Geocode end location
+      const endRes = await axios.get('https://nominatim.openstreetmap.org/search', {
+        params: { q: destination, format: 'json', limit: 1 }
+      });
+
+      if (startRes.data.length > 0 && endRes.data.length > 0) {
+        const startCoords = [parseFloat(startRes.data[0].lat), parseFloat(startRes.data[0].lon)];
+        const endCoords = [parseFloat(endRes.data[0].lat), parseFloat(endRes.data[0].lon)];
+        
+        setStartPoint(startCoords);
+        setEndPoint(endCoords);
+
+        // Calculate a simple midpoint for the mock curved routes
+        const midLat = (startCoords[0] + endCoords[0]) / 2;
+        const midLon = (startCoords[1] + endCoords[1]) / 2;
+
+        // Mock Route Lines between the actual points
+        setActiveRoutes([
+          {
+            color: '#10b981', // Safest - Teal
+            coordinates: [
+              startCoords,
+              [midLat + 0.005, midLon - 0.005], // Slight curve
+              endCoords
+            ]
+          },
+          {
+            color: '#ef4444', // Shortest - Red
+            coordinates: [
+              startCoords,
+              [midLat - 0.002, midLon + 0.002], // Slight curve
+              endCoords
+            ]
+          }
+        ]);
+      } else {
+        alert("Could not find one or both locations. Please try again.");
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      alert("Failed to geocode locations.");
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="relative w-screen h-screen overflow-hidden bg-slate-900">
+      <Sidebar onRouteCompute={handleRouteCompute} />
+      <MapLayout 
+        startPoint={startPoint} 
+        endPoint={endPoint} 
+        activeRoutes={activeRoutes} 
+      />
+    </div>
+  );
 }
 
-export default App
+export default App;
