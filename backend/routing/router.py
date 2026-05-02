@@ -22,13 +22,13 @@ def get_db_connection():
         password=DB_PASS
     )
 
-def get_graph_for_place(place):
-    """Fetch or build graph for place, using OSMnx disk cache to avoid re-downloading."""
+def get_graph_for_bbox(north, south, east, west):
+    """Fetch or build graph for bbox, using OSMnx disk cache to avoid re-downloading."""
     import pathlib
     cache_dir = str(pathlib.Path(__file__).resolve().parent.parent.parent / "cache")
     ox.settings.use_cache = True
     ox.settings.cache_folder = cache_dir
-    return ox.graph_from_place(place, network_type='drive')
+    return ox.graph_from_bbox(bbox=(north, south, east, west), network_type='drive')
 
 def get_nearest_node(G, lat, lon):
     """Find nearest node in graph to given lat/lon using scipy cKDTree."""
@@ -158,7 +158,13 @@ def find_routes(origin_lat, origin_lon, dest_lat, dest_lon, place, max_routes=3)
     result = {}
     def try_real_routes():
         try:
-            G = get_graph_for_place(place)
+            buffer = 0.05
+            north = max(origin_lat, dest_lat) + buffer
+            south = min(origin_lat, dest_lat) - buffer
+            east = max(origin_lon, dest_lon) + buffer
+            west = min(origin_lon, dest_lon) - buffer
+            
+            G = get_graph_for_bbox(north, south, east, west)
             load_risk_scores_into_graph(G)  # stamp DB risk scores onto edges
             origin_node = get_nearest_node(G, origin_lat, origin_lon)
             dest_node = get_nearest_node(G, dest_lat, dest_lon)
@@ -182,7 +188,7 @@ def find_routes(origin_lat, origin_lon, dest_lat, dest_lon, place, max_routes=3)
 
     thread = threading.Thread(target=try_real_routes)
     thread.start()
-    thread.join(timeout=120)  # OSMnx can take up to ~60s on first fetch; cache speeds up retries
+    thread.join(timeout=300)  # OSMnx can take longer for large bboxes; increase timeout
 
     if 'routes' in result:
         return result['routes']

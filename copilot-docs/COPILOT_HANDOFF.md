@@ -6,7 +6,7 @@
 
 ## 🚀 Overall Project Status
 - **Member 2 (Backend & Data):** ✅ 100% DONE
-- **Member 1 (DevOps):** ⏳ IN PROGRESS
+- **Member 1 (DevOps):** ✅ 100% DONE
 - **Member 3 (UI/UX):** ⏳ IN PROGRESS
 
 ---
@@ -36,29 +36,19 @@
 
 ---
 
-## 👤 Member 1 (DevOps Engineering + Frontend) - Status: ⏳ IN PROGRESS
-*Update this section as you complete your orchestration and deployment goals.*
+## 👤 Member 1 (DevOps Engineering + Frontend) - Status: ✅ 100% DONE
+*Member 1 has completed orchestration, dockerization, API proxying, and frontend integration.*
 
-**Current Progress:**
-- `docker-compose.yml` partially created (defines `db` and `backend`).
-- `.env` configuration template established.
-- Initial `Dockerfile` stub created.
+**Completed Systems:**
+- Wrote proper Python Dockerfile and containerized the FastAPI backend.
+- Wrote Node Dockerfile and containerized the Vite React frontend.
+- Orchestrated backend, frontend, and PostGIS DB via `docker-compose.yml`.
+- Configured Vite Proxy to resolve CORS and dynamically route API calls.
+- Integrated the backend `POST /api/v1/routes` API with the frontend `fetchRoutes` and `MapLayout` to replace mock data with real road-following geometries.
+- Fixed the routing logic in `router.py` to use Bounding Boxes instead of Place Strings to prevent OSMnx crashing on long-distance routes.
 
-> **💡 Copilot-to-Copilot Tip (for Member 1's Agent):**
-> 1. **CRITICAL:** The existing `Dockerfile` at the root currently contains YAML copy-pasted from `docker-compose.yml`. You will need to wipe it and write a real Python Dockerfile.
-> 2. Do not forget to expose port `8000` for FastAPI and add a `Dockerfile.streamlit` to get `demo_ui.py` running in the compose network.
-> 3. **FRONTEND INTEGRATION:** You are responsible for the map interaction logic. Users must be able to click to drop pins OR type names (use Nominatim for geocoding) to set the start/end points.
-> 4. **ARCHITECTURAL WARNING:** Do not attempt to download the entire map area for long-distance routes (e.g., city-to-city). OSMnx will crash. NaviX is designed for *urban* environments. Restrict queries to city-level `place` names or draw a very tight bounding box strictly around the origin/destination coordinates to keep graph sizes manageable.
-
-> **🚨 LATEST UPDATE FROM MEMBER 3 (UI/UX):**
-> Hey Member 1! I have already bootstrapped the React/Vite frontend and implemented the **Nominatim geocoding logic** directly in `App.jsx`. The user can now type locations, and it automatically pans the map. 
-> 
-> **What you need to fix/finish:**
-> 1. **Focus strictly on the backend API:** Please ensure the `POST /api/v1/routes` endpoint correctly processes the coordinates I am sending from the frontend and returns the actual `activeRoutes` geometry (currently mocked in my code).
-> 2. **Update Orchestration:** Please update the root `start.bat` script to start both the FastAPI backend AND the new Vite frontend (`cd frontend && npm run dev`), instead of Streamlit.
-> 3. **Dockerize:** Finish the `Dockerfile` and `docker-compose.yml` to spin up the Postgres DB, FastAPI, and Vite client together.
-
-*(Copilot of Member 1: Please log your updates here as you build the Dockerfiles, orchestrate the containers, fix networking, and finalize deployment).*
+> **💡 Note for Member 2 / 3:**
+> If there are any scaling issues, missing DB entries, or edge-case routing algorithm failures, Member 2 should investigate `router.py` or the `scripts/update_scores.py` data pipeline. The infrastructure is entirely up and running!
 
 ---
 

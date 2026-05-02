@@ -8,10 +8,10 @@ timeout /t 2 /nobreak > nul
 for /f "tokens=2" %%a in ('tasklist /fi "imagename eq python.exe" /fo list ^| findstr "PID:"') do set BACKEND_PID=%%a
 
 echo Backend started (PID: %BACKEND_PID%)
-echo Starting NaviX Streamlit UI...
+echo Starting NaviX Vite React UI...
 
-.venv\Scripts\streamlit run scripts/demo_ui.py
+cd frontend && npm run dev
 
-echo Streamlit exited. Stopping backend (PID: %BACKEND_PID%)...
+echo Vite exited. Stopping backend (PID: %BACKEND_PID%)...
 taskkill /PID %BACKEND_PID% /F > nul 2>&1
 echo Done.

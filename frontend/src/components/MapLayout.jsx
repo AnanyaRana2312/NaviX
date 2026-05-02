@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icons in Leaflet with Vite
 import L from 'leaflet';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
@@ -15,24 +14,25 @@ L.Icon.Default.mergeOptions({
   shadowUrl,
 });
 
-// Component to dynamically re-center map
-const MapUpdater = ({ startPoint, endPoint }) => {
+const MapUpdater = ({ startPoint, endPoint, selectedRoute }) => {
   const map = useMap();
   
   useEffect(() => {
-    if (startPoint && endPoint) {
+    if (selectedRoute && selectedRoute.path && selectedRoute.path.length > 0) {
+      const bounds = L.latLngBounds(selectedRoute.path);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } else if (startPoint && endPoint) {
       const bounds = L.latLngBounds([startPoint, endPoint]);
       map.fitBounds(bounds, { padding: [50, 50] });
     } else if (startPoint) {
       map.flyTo(startPoint, 13);
     }
-  }, [startPoint, endPoint, map]);
+  }, [startPoint, endPoint, selectedRoute, map]);
   
   return null;
 };
 
-const MapLayout = ({ startPoint, endPoint, activeRoutes = [] }) => {
-  // Default to a central city coordinate (e.g., New York for demo) if no points
+const MapLayout = ({ startPoint, endPoint, activeRoutes = [], selectedIndex = 0 }) => {
   const defaultCenter = [40.7128, -74.0060];
   const center = startPoint || defaultCenter;
 
@@ -43,13 +43,18 @@ const MapLayout = ({ startPoint, endPoint, activeRoutes = [] }) => {
         zoom={13} 
         zoomControl={false}
         className="w-full h-full"
+        style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 1 }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CartoDB</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        <MapUpdater startPoint={startPoint} endPoint={endPoint} />
+        <MapUpdater 
+          startPoint={startPoint} 
+          endPoint={endPoint} 
+          selectedRoute={activeRoutes[selectedIndex]} 
+        />
         
         {startPoint && (
           <Marker position={startPoint}>
@@ -63,16 +68,24 @@ const MapLayout = ({ startPoint, endPoint, activeRoutes = [] }) => {
           </Marker>
         )}
 
-        {/* Render Routes - This will be populated once API is hooked up */}
-        {activeRoutes.map((route, index) => (
-          <Polyline 
-            key={index} 
-            positions={route.coordinates} 
-            color={route.color} 
-            weight={5} 
-            opacity={0.8} 
-          />
-        ))}
+        {activeRoutes.map((route, index) => {
+          const isSelected = index === selectedIndex;
+          const color = isSelected ? '#3b82f6' : route.color;
+          const weight = isSelected ? 8 : 4;
+          const opacity = isSelected ? 1 : 0.5;
+          
+          return (
+            <Polyline 
+              key={index} 
+              positions={route.path} 
+              color={color} 
+              weight={weight} 
+              opacity={opacity} 
+            >
+              <Tooltip sticky>{route.type} ({ (route.total_distance / 1000).toFixed(1) } km)</Tooltip>
+            </Polyline>
+          );
+        })}
       </MapContainer>
     </div>
   );

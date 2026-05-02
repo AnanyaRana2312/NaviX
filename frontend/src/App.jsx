@@ -3,22 +3,19 @@ import axios from 'axios';
 import Sidebar from './components/Sidebar';
 import MapLayout from './components/MapLayout';
 import './App.css';
+import { fetchRoutes } from './api/routes';
 
 function App() {
   const [activeRoutes, setActiveRoutes] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [startPoint, setStartPoint] = useState(null);
   const [endPoint, setEndPoint] = useState(null);
 
   const handleRouteCompute = async (start, destination) => {
-    console.log("Computing route from", start, "to", destination);
-    
     try {
-      // Geocode start location
       const startRes = await axios.get('https://nominatim.openstreetmap.org/search', {
         params: { q: start, format: 'json', limit: 1 }
       });
-      
-      // Geocode end location
       const endRes = await axios.get('https://nominatim.openstreetmap.org/search', {
         params: { q: destination, format: 'json', limit: 1 }
       });
@@ -30,29 +27,22 @@ function App() {
         setStartPoint(startCoords);
         setEndPoint(endCoords);
 
-        // Calculate a simple midpoint for the mock curved routes
-        const midLat = (startCoords[0] + endCoords[0]) / 2;
-        const midLon = (startCoords[1] + endCoords[1]) / 2;
-
-        // Mock Route Lines between the actual points
-        setActiveRoutes([
-          {
-            color: '#10b981', // Safest - Teal
-            coordinates: [
-              startCoords,
-              [midLat + 0.005, midLon - 0.005], // Slight curve
-              endCoords
-            ]
-          },
-          {
-            color: '#ef4444', // Shortest - Red
-            coordinates: [
-              startCoords,
-              [midLat - 0.002, midLon + 0.002], // Slight curve
-              endCoords
-            ]
+        try {
+          const routeData = await fetchRoutes(startCoords, endCoords, destination);
+          if (routeData && routeData.routes) {
+            const mappedRoutes = routeData.routes.map((r, idx) => ({
+              ...r,
+              id: idx,
+              type: idx === 0 ? "Safest Route" : (idx === routeData.routes.length - 1 ? "Shortest Route" : "Balanced Route"),
+              color: idx === 0 ? '#10b981' : (idx === routeData.routes.length - 1 ? '#ef4444' : '#f59e0b')
+            }));
+            setActiveRoutes(mappedRoutes);
+            setSelectedIndex(0);
           }
-        ]);
+        } catch (apiError) {
+          console.error("Backend API error:", apiError);
+          alert("Failed to compute routes. Is the backend running?");
+        }
       } else {
         alert("Could not find one or both locations. Please try again.");
       }
@@ -64,11 +54,17 @@ function App() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-900">
-      <Sidebar onRouteCompute={handleRouteCompute} />
+      <Sidebar 
+        onRouteCompute={handleRouteCompute} 
+        routes={activeRoutes}
+        selectedIndex={selectedIndex}
+        onSelectRoute={setSelectedIndex}
+      />
       <MapLayout 
         startPoint={startPoint} 
         endPoint={endPoint} 
         activeRoutes={activeRoutes} 
+        selectedIndex={selectedIndex}
       />
     </div>
   );
