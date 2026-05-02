@@ -6,7 +6,7 @@
 
 ## 🚀 Overall Project Status
 - **Member 2 (Backend & Data):** ✅ 100% DONE (Dehradun Migration Complete)
-- **Member 1 (DevOps):** ✅ 100% DONE (Docker & Scripts Complete)
+- **Member 1 (DevOps):** ⏳ PENDING BUG FIX
 - **Member 3 (UI/UX):** ✅ 100% DONE (React Progress & BBOX Fallback Complete)
 
 ---
@@ -37,6 +37,7 @@ The project has been successfully migrated to Dehradun, Uttarakhand, India. The 
 - ✅ Orchestrated `docker-compose.yml` with health-dependent startup (Frontend waits for Backend `service_healthy`).
 - ✅ Implemented `start.ps1` with auto-IP detection for LAN testing.
 - ✅ Fixed Docker image to include `curl` for internal health verification.
+- ❌ **Known Issue (Member 1)**: Selecting origin and destination by clicking/dropping a pin directly on the map is currently **not working**. This needs to be implemented by linking Leaflet click events to the Sidebar input state.
 
 ---
 
