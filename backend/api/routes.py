@@ -1,8 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from backend.models.schemas import RouteRequest, RouteResponse
-from backend.routing.router import find_routes, get_db_connection
+from backend.routing.router import find_routes, get_db_connection, route_progress
 
 router = APIRouter()
+
+@router.get("/health")
+def health_check():
+    """Service health check."""
+    return {"status": "healthy"}
 
 @router.get("/progress")
 def get_db_progress():
@@ -22,14 +27,25 @@ def get_db_progress():
     except Exception as e:
         return {"scored": 0, "total": 0, "percent": 0, "error": str(e)}
 
+@router.get("/routes/progress/{task_id}")
+def get_route_progress(task_id: str):
+    """Return the real-time progress of a routing computation task."""
+    if task_id in route_progress:
+        return route_progress[task_id]
+    return {"message": "Waiting to start...", "percent": 0}
+
 @router.post("/routes", response_model=RouteResponse)
 def get_routes(request: RouteRequest):
     """Get multiple safety-aware routes."""
     try:
         raw_routes = find_routes(
-            request.origin_lat, request.origin_lon,
-            request.destination_lat, request.destination_lon,
-            request.place, request.max_routes
+            origin_lat=request.origin_lat, 
+            origin_lon=request.origin_lon,
+            dest_lat=request.destination_lat, 
+            dest_lon=request.destination_lon,
+            origin_name=request.place,
+            max_routes=request.max_routes, 
+            task_id=request.task_id
         )
         routes = []
         for r in raw_routes:

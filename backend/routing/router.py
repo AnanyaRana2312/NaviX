@@ -3,6 +3,7 @@ import networkx as nx
 import psycopg2
 import os
 from dotenv import load_dotenv
+from backend.data_updates.manager import repopulate_database, repopulate_database_bbox, get_db_connection as get_manager_conn
 
 load_dotenv()
 
@@ -11,6 +12,12 @@ DB_PORT = os.getenv('DB_PORT', '5432')
 DB_NAME = os.getenv('DB_NAME', 'navix')
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASS = os.getenv('DB_PASS', 'password')
+
+route_progress = {}
+
+def set_progress(task_id, msg, pct):
+    if task_id:
+        route_progress[task_id] = {"message": msg, "percent": pct}
 
 def get_db_connection():
     return psycopg2.connect(
@@ -116,8 +123,10 @@ def get_route_details(G, path):
 
     return coords, total_length, total_risk, segments
 
-def find_routes(origin_lat=None, origin_lon=None, dest_lat=None, dest_lon=None, origin_name=None, dest_name=None, max_routes=3):
+def find_routes(origin_lat=None, origin_lon=None, dest_lat=None, dest_lon=None, origin_name=None, dest_name=None, max_routes=3, task_id=None):
     """Find multiple routes balancing safety and distance dynamically."""
+    set_progress(task_id, "Geocoding coordinates...", 5)
+    
     if origin_lat is None or origin_lon is None:
         if not origin_name:
             raise ValueError("Must provide either origin coordinates or origin_name")
@@ -132,6 +141,33 @@ def find_routes(origin_lat=None, origin_lon=None, dest_lat=None, dest_lon=None, 
         
     print(f"[NaviX] Origin Coords: {origin_lat}, {origin_lon}")
     print(f"[NaviX] Destination Coords: {dest_lat}, {dest_lon}")
+
+    # Check if database needs population
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM roads")
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        
+        # Use origin_name as the place reference for population
+        place_name = origin_name if origin_name else "Dehradun, Uttarakhand, India"
+        
+        if count == 0:
+            print(f"[NaviX] Database is empty. Starting automatic population for {place_name}...")
+            try:
+                repopulate_database(place_name, task_id, set_progress)
+            except Exception as e:
+                print(f"[NaviX] Place-based population failed ({e}). Falling back to BBOX population...")
+                # Use current request bbox for population
+                north = max(origin_lat, dest_lat) + 0.05
+                south = min(origin_lat, dest_lat) - 0.05
+                east = max(origin_lon, dest_lon) + 0.05
+                west = min(origin_lon, dest_lon) - 0.05
+                repopulate_database_bbox(north, south, east, west, task_id, set_progress)
+    except Exception as e:
+        print(f"[NaviX] Database check failed: {e}. Population skipped.")
 
     import pathlib
     cache_dir = str(pathlib.Path(__file__).resolve().parent.parent.parent / "cache")
@@ -149,8 +185,9 @@ def find_routes(origin_lat=None, origin_lon=None, dest_lat=None, dest_lon=None, 
             east = max(origin_lon, dest_lon) + buffer
             west = min(origin_lon, dest_lon) - buffer
             
+            set_progress(task_id, f"Fetching street graph from OpenStreetMap (Buffer {buffer})...", 20)
             print(f"[NaviX] Extracting Bounding Box: N={north}, S={south}, E={east}, W={west}")
-            G = ox.graph_from_bbox(bbox=(north, south, east, west), network_type='drive')
+            G = ox.graph_from_bbox(bbox=(west, south, east, north), network_type='drive')
             
             num_nodes = len(G.nodes)
             print(f"[NaviX] Downloaded graph with {num_nodes} nodes.")
@@ -159,6 +196,7 @@ def find_routes(origin_lat=None, origin_lon=None, dest_lat=None, dest_lon=None, 
                 print("[NaviX] Graph too small. Retrying with larger buffer...")
                 continue
                 
+            set_progress(task_id, "Loading Risk Scores from Database...", 60)
             load_risk_scores_into_graph(G)
             
             orig_node = ox.distance.nearest_nodes(G, origin_lon, origin_lat)
@@ -168,6 +206,7 @@ def find_routes(origin_lat=None, origin_lon=None, dest_lat=None, dest_lon=None, 
             
             routes_found = False
             for i in range(max_routes):
+                set_progress(task_id, f"Computing Risk-Weighted Route {i+1}/{max_routes}...", 70 + (i * 10))
                 risk_weight = i * 0.5
                 path = compute_route(G, orig_node, dest_node, risk_weight)
                 if not path:
@@ -183,6 +222,7 @@ def find_routes(origin_lat=None, origin_lon=None, dest_lat=None, dest_lon=None, 
                 routes_found = True
                 
             if routes_found:
+                set_progress(task_id, "Finalizing payload...", 100)
                 print(f"[NaviX] Successfully generated {len(routes)} road-following routes.")
                 break
                 

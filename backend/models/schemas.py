@@ -11,6 +11,7 @@ class RouteRequest(BaseModel):
     destination_name: Optional[str] = None
     place: Optional[str] = None
     max_routes: Optional[int] = 3
+    task_id: Optional[str] = None
 
 # Response models
 class RoadSegment(BaseModel):

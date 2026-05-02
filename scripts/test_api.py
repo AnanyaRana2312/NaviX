@@ -6,7 +6,7 @@ body = {
     "origin_lon": -74.0060,
     "destination_lat": 40.7306,
     "destination_lon": -73.9352,
-    "place": "New York City",
+    "place": "Dehradun",
     "max_routes": 3
 }
 

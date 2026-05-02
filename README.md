@@ -4,69 +4,47 @@
 NaviX is an advanced navigation backend designed to prioritize pedestrian and vehicular safety in complex urban environments. While traditional routing engines strictly optimize for distance or time, NaviX introduces a dynamic **Safety Risk Engine** that actively evaluates spatial features like street lighting density, Points of Interest (POIs), road isolation, and human presence proxies.
 
 ## 🚀 Key Features
-- **Intelligent Routing**: Modified A* pathfinding algorithm providing three distinct route options: Shortest, Safest, and Balanced.
+- **Intelligent Routing**: Modified A* pathfinding algorithm providing three distinct route options: **Safest**, **Balanced**, and **Shortest**.
 - **Multithreaded Safety Engine**: Asynchronously queries OpenStreetMap spatial features via PostGIS to score road segments based on environmental risk factors.
-- **Robust API**: A high-performance FastAPI backend delivering precise GeoJSON coordinates and segment-level metadata.
-- **Spatial Database**: Powered by PostgreSQL + PostGIS, utilizing highly optimized spatial GiST indexing.
+- **Automated Data Population**: Automatically fetches and scores road networks for new areas (localized to Dehradun, India).
+- **Containerized Architecture**: Full stack deployment using Docker Compose (React + FastAPI + PostGIS).
+- **Real-time Feedback**: Dynamic progress bar and status updates during large-scale data computations.
 
-## 🛠️ Technology Stack
-- **Backend Framework:** FastAPI (Python)
-- **Database:** PostgreSQL + PostGIS
-- **Data Ingestion:** OSMnx, Overpass API
-- **Graph Processing:** NetworkX, SciPy
-- **Containerization:** Docker, Docker Compose
-- **Testing UI:** Streamlit, Folium Maps
-
-## ⚙️ Local Development Setup
+## ⚙️ Quick Start
 
 ### Prerequisites
-- Docker & Docker Compose
-- Python **3.11.9** (Highly Recommended)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- PowerShell (on Windows)
 
-### Running the Project
-1. **Clone the repository:**
-   ```bash
+### Running the App
+1. **Clone & Setup**:
+   ```powershell
    git clone https://github.com/AnanyaRana2312/NaviX.git
    cd NaviX
-   ```
-
-2. **Setup the Virtual Environment & Dependencies:**
-   It is strongly recommended to create and use a Python virtual environment (`.venv`) before installing dependencies:
-   ```bash
-   python -m venv .venv
-   # Windows:
-   .venv\Scripts\activate
-   # macOS/Linux:
-   source .venv/bin/activate
-   
-   # Once the .venv is active, install the up-to-date requirements:
-   pip install -r requirements.txt
-   ```
-
-3. **Configure Secrets:**
-   You must configure your local environment variables before running the application. Copy or rename the provided `demo.env` file to `.env`:
-   ```bash
    cp demo.env .env
-   # Or on Windows CMD/PowerShell:
-   # copy demo.env .env
+   ```
+2. **Start Everything**:
+   ```powershell
+   .\start.ps1
+   ```
+   *This will build the containers, initialize the database, and show you the local/network links.*
+
+3. **Stop Everything**:
+   ```powershell
+   .\stop.ps1
    ```
 
-3. **Start the Database (Docker):**
-   Spin up the PostGIS container:
-   ```bash
-   docker-compose up -d db
-   ```
+## 🛠️ Technology Stack
+- **Frontend**: React (Vite), TailwindCSS, Leaflet
+- **Backend**: FastAPI (Python), Uvicorn
+- **Database**: PostgreSQL 15 + PostGIS
+- **Data**: OSMnx, NetworkX, GeoPandas, Scikit-learn
+- **Orchestration**: Docker Compose
 
-4. **Run the Application (Windows):**
-   Execute the startup script to automatically initialize the virtual environment, install dependencies, and launch both the FastAPI backend and Streamlit demo UI:
-   ```cmd
-   .\start.bat
-   ```
-
-## 👥 Team Roles
-- **Ananya Rana** (Member 1): DevOps Engineering & Frontend Integration
-- **Pranav Akshit** (Member 2): Backend Architecture, Dataset Management, & Safety Modeling
-- **Zoya** (Member 3): UI/UX Design & Frontend Development
+## 👥 Team
+- **Ananya Rana**: DevOps & Frontend Integration
+- **Pranav Akshit**: Backend Architecture & Safety Modeling
+- **Zoya**: UI/UX Design
 
 ---
 *Developed as a collaborative prototype for spatial data science and routing algorithms.*

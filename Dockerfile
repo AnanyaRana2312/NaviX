@@ -6,12 +6,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.backend.txt .
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.backend.txt
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.backend.txt
 
 COPY ./backend /app/backend
 

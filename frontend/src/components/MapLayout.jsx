@@ -33,7 +33,7 @@ const MapUpdater = ({ startPoint, endPoint, selectedRoute }) => {
 };
 
 const MapLayout = ({ startPoint, endPoint, activeRoutes = [], selectedIndex = 0 }) => {
-  const defaultCenter = [40.7128, -74.0060];
+  const defaultCenter = [30.3165, 78.0322];
   const center = startPoint || defaultCenter;
 
   return (

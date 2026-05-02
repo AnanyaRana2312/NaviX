@@ -7,7 +7,7 @@ def run_test():
         "origin_lon": -74.0060,
         "destination_lat": 40.7306,
         "destination_lon": -73.9352,
-        "place": "Manhattan, New York City, USA",
+        "place": "Dehradun, Uttarakhand, India",
         "max_routes": 1
     }
     

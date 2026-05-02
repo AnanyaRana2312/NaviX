@@ -12,11 +12,11 @@ st.title("NaviX Route Demo")
 st.markdown("Safety-aware routing demo. Enter start/end coordinates and place.")
 
 if 'origin_lat' not in st.session_state:
-    st.session_state['origin_lat'] = 40.7128
-    st.session_state['origin_lon'] = -74.0060
+    st.session_state['origin_lat'] = 30.3995
+    st.session_state['origin_lon'] = 77.9691
 if 'dest_lat' not in st.session_state:
-    st.session_state['dest_lat'] = 40.7306
-    st.session_state['dest_lon'] = -73.9352
+    st.session_state['dest_lat'] = 30.4079
+    st.session_state['dest_lon'] = 77.9687
 if 'selecting_mode' not in st.session_state:
     st.session_state['selecting_mode'] = 'Origin'
 
@@ -101,17 +101,20 @@ def render_sidebar_status():
 with st.sidebar:
     render_sidebar_status()
 
-place = st.text_input("Place Name", value="Manhattan, New York City, USA")
+place = st.text_input("Place Name", value="Dehradun, Uttarakhand, India")
 max_routes = st.slider("Number of Routes", min_value=1, max_value=3, value=3)
 
 if st.button("Get Routes"):
+    import uuid
+    task_id = f"task_demo_{uuid.uuid4().hex[:8]}"
     body = {
         "origin_lat": origin_lat,
         "origin_lon": origin_lon,
         "destination_lat": dest_lat,
         "destination_lon": dest_lon,
         "place": place,
-        "max_routes": max_routes
+        "max_routes": max_routes,
+        "task_id": task_id
     }
     import time
     import threading
@@ -132,17 +135,18 @@ if st.button("Get Routes"):
     thread = threading.Thread(target=fetch_data)
     thread.start()
     
-    # Estimated time is ~5 seconds for cache load + A* 
-    eta_seconds = 5
-    elapsed = 0
-    
     while thread.is_alive():
-        time.sleep(0.1)
-        elapsed += 0.1
-        # Cap visual progress at 95% until thread actually finishes
-        progress = min(int((elapsed / eta_seconds) * 100), 95)
-        progress_bar.progress(progress)
-        status_text.text(f"Fetching routes... (ETA: ~{max(0, int(eta_seconds - elapsed))}s remaining)")
+        time.sleep(0.5)
+        try:
+            prog_resp = requests.get(f'{BACKEND_URL}/api/v1/routes/progress/{task_id}', timeout=1)
+            if prog_resp.status_code == 200:
+                prog_data = prog_resp.json()
+                pct = prog_data.get('percent', 0)
+                msg = prog_data.get('message', 'Fetching routes...')
+                progress_bar.progress(int(pct))
+                status_text.text(f"{msg} ({pct}%)")
+        except:
+            pass
         
     thread.join()
     progress_bar.progress(100)

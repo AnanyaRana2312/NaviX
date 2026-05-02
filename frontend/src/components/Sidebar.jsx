@@ -73,7 +73,7 @@ const generateTurnByTurn = (path) => {
   return steps;
 };
 
-const Sidebar = ({ onRouteCompute, routes = [], selectedIndex = 0, onSelectRoute }) => {
+const Sidebar = ({ onRouteCompute, routes = [], selectedIndex = 0, onSelectRoute, isComputing = false, computeProgress = 0, progressMessage = "Initializing..." }) => {
   const [start, setStart] = useState('');
   const [destination, setDestination] = useState('');
 
@@ -136,9 +136,20 @@ const Sidebar = ({ onRouteCompute, routes = [], selectedIndex = 0, onSelectRoute
 
           <button
             type="submit"
-            className="mt-2 w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-slate-900 transition-all transform hover:-translate-y-0.5"
+            disabled={isComputing}
+            className={`mt-2 w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white transition-all overflow-hidden relative ${isComputing ? 'bg-slate-700 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-slate-900 transform hover:-translate-y-0.5'}`}
           >
-            Compute Routes
+            {isComputing && (
+              <div 
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-teal-400 opacity-50 transition-all duration-200" 
+                style={{ width: `${computeProgress}%` }}
+              />
+            )}
+            <span className="relative z-10">
+              {isComputing 
+                ? `${progressMessage} (${computeProgress}%)` 
+                : 'Compute Routes'}
+            </span>
           </button>
         </form>
       </div>

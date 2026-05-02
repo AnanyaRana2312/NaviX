@@ -3,15 +3,32 @@ import axios from 'axios';
 import Sidebar from './components/Sidebar';
 import MapLayout from './components/MapLayout';
 import './App.css';
-import { fetchRoutes } from './api/routes';
+import { fetchRoutes, fetchRouteProgress } from './api/routes';
 
 function App() {
   const [activeRoutes, setActiveRoutes] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [startPoint, setStartPoint] = useState(null);
   const [endPoint, setEndPoint] = useState(null);
+  const [isComputing, setIsComputing] = useState(false);
+  const [computeProgress, setComputeProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("Initializing...");
 
   const handleRouteCompute = async (start, destination) => {
+    setIsComputing(true);
+    setComputeProgress(5);
+    
+    // Generate a unique task ID for this routing request
+    const taskId = `task_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    
+    // Setup a real progress polling interval
+    const progressInterval = setInterval(async () => {
+      const prog = await fetchRouteProgress(taskId);
+      if (prog) {
+        if (prog.percent > 0) setComputeProgress(prog.percent);
+        if (prog.message) setProgressMessage(prog.message);
+      }
+    }, 500);
     try {
       const startRes = await axios.get('https://nominatim.openstreetmap.org/search', {
         params: { q: start, format: 'json', limit: 1 }
@@ -28,7 +45,7 @@ function App() {
         setEndPoint(endCoords);
 
         try {
-          const routeData = await fetchRoutes(startCoords, endCoords, destination);
+          const routeData = await fetchRoutes(startCoords, endCoords, destination, taskId);
           if (routeData && routeData.routes) {
             const mappedRoutes = routeData.routes.map((r, idx) => ({
               ...r,
@@ -49,6 +66,13 @@ function App() {
     } catch (error) {
       console.error("Geocoding error:", error);
       alert("Failed to geocode locations.");
+    } finally {
+      clearInterval(progressInterval);
+      setComputeProgress(100);
+      setTimeout(() => {
+        setIsComputing(false);
+        setComputeProgress(0);
+      }, 500);
     }
   };
 
@@ -59,6 +83,9 @@ function App() {
         routes={activeRoutes}
         selectedIndex={selectedIndex}
         onSelectRoute={setSelectedIndex}
+        isComputing={isComputing}
+        computeProgress={computeProgress}
+        progressMessage={progressMessage}
       />
       <MapLayout 
         startPoint={startPoint} 
