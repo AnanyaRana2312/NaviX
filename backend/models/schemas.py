@@ -3,11 +3,13 @@ from typing import List, Optional
 
 # Request models
 class RouteRequest(BaseModel):
-    origin_lat: float
-    origin_lon: float
-    destination_lat: float
-    destination_lon: float
-    place: str  # e.g., "New York City"
+    origin_lat: Optional[float] = None
+    origin_lon: Optional[float] = None
+    destination_lat: Optional[float] = None
+    destination_lon: Optional[float] = None
+    origin_name: Optional[str] = None
+    destination_name: Optional[str] = None
+    place: Optional[str] = None
     max_routes: Optional[int] = 3
 
 # Response models
