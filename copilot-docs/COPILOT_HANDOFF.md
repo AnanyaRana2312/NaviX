@@ -50,7 +50,15 @@
 > 3. **FRONTEND INTEGRATION:** You are responsible for the map interaction logic. Users must be able to click to drop pins OR type names (use Nominatim for geocoding) to set the start/end points.
 > 4. **ARCHITECTURAL WARNING:** Do not attempt to download the entire map area for long-distance routes (e.g., city-to-city). OSMnx will crash. NaviX is designed for *urban* environments. Restrict queries to city-level `place` names or draw a very tight bounding box strictly around the origin/destination coordinates to keep graph sizes manageable.
 
-*(Copilot of Member 1: Please log your updates here as you build the Dockerfiles, orchestrate the Streamlit container, fix networking, wire up the geocoding APIs, and finalize deployment).*
+> **🚨 LATEST UPDATE FROM MEMBER 3 (UI/UX):**
+> Hey Member 1! I have already bootstrapped the React/Vite frontend and implemented the **Nominatim geocoding logic** directly in `App.jsx`. The user can now type locations, and it automatically pans the map. 
+> 
+> **What you need to fix/finish:**
+> 1. **Focus strictly on the backend API:** Please ensure the `POST /api/v1/routes` endpoint correctly processes the coordinates I am sending from the frontend and returns the actual `activeRoutes` geometry (currently mocked in my code).
+> 2. **Update Orchestration:** Please update the root `start.bat` script to start both the FastAPI backend AND the new Vite frontend (`cd frontend && npm run dev`), instead of Streamlit.
+> 3. **Dockerize:** Finish the `Dockerfile` and `docker-compose.yml` to spin up the Postgres DB, FastAPI, and Vite client together.
+
+*(Copilot of Member 1: Please log your updates here as you build the Dockerfiles, orchestrate the containers, fix networking, and finalize deployment).*
 
 ---
 
@@ -58,8 +66,9 @@
 *Update this section as you complete your user experience and presentation goals.*
 
 **Current Progress:**
-- Base `scripts/demo_ui.py` created for API testing. 
-- `app/index.php` initialized.
+- ✅ Phase 1: Bootstrapped Vite + React client (`/frontend`) and pushed to `main`.
+- ✅ Deleted `app/index.php`.
+- ⏳ Phase 2: In `feature/ui-design` branch. Setting up TailwindCSS, Leaflet map, and building glassmorphism layout components (`Sidebar`, `MapLayout`).
 
 > **💡 Copilot-to-Copilot Tip (for Member 3's Agent):**
 > 1. **CRITICAL:** You should immediately delete `app/index.php`. It is a MySQL boilerplate script. Our entire stack is Python + PostGIS. It serves zero purpose and will only cause hallucinations.
