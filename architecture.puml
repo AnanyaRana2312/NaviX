@@ -1,0 +1,53 @@
+@startuml
+skinparam backgroundColor #F0F0F0
+skinparam componentStyle rectangle
+
+' Define components
+package "Frontend" {
+  [React App] <<Component>>
+}
+
+package "Backend" {
+  [FastAPI Server] <<Component>>
+  package "API" {
+    [API Routes] <<Component>>
+  }
+  package "Safety" {
+    [Safety Engine] <<Component>>
+  }
+  package "Routing" {
+    [Routing Engine] <<Component>>
+  }
+  package "DataUpdates" {
+    [Data Updates] <<Component>>
+  }
+}
+
+package "Database" {
+  [PostgreSQL] <<Database>>
+  [PostGIS] <<Database>>
+}
+
+package "Docker" {
+  [docker-compose.yml] <<Configuration>>
+}
+
+package "External Services" {
+  [OpenStreetMap] <<Service>>
+  [PostGIS Service] <<Service>>
+}
+
+' Relationships
+[React App] --> [FastAPI Server] : REST API Calls
+[FastAPI Server] --> [PostgreSQL] : SQL/ORM
+[FastAPI Server] --> [PostGIS] : Spatial Queries
+[FastAPI Server] --> [OpenStreetMap] : OSM Data Fetch
+[Safety Engine] --> [OpenStreetMap] : Feature Queries
+[Routing Engine] --> [PostgreSQL] : Road Network
+[Routing Engine] --> [PostGIS] : Spatial Network
+[Data Updates] --> [OpenStreetMap] : Sync Data
+[Docker Compose] --> [React App]
+[Docker Compose] --> [FastAPI Server]
+[Docker Compose] --> [PostgreSQL]
+[Docker Compose] --> [PostGIS]
+@enduml
